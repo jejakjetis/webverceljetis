@@ -3,9 +3,9 @@
 Website wisata satu halaman dengan pemesanan tiket kunjungan (Sabtu/Minggu, kuota per sesi) dan panel admin untuk mengelola status pesanan. Pembayaran QRIS dikonfirmasi manual via WhatsApp (`PAYMENT_MODE` manual; Midtrans ditunda).
 
 ## Stack
-Next.js 16 (App Router) + TypeScript strict · Tailwind CSS v4 · PostgreSQL (Supabase) via Prisma 7 (`@prisma/adapter-pg`, compiler `small`) · Supabase Auth (`@supabase/ssr`, khusus admin) · Zod 4 · Vitest · Deploy **Cloudflare Workers** via `@opennextjs/cloudflare`, DB runtime lewat binding **Hyperdrive** (koneksi langsung Supabase 5432) · Turnstile · Zona waktu bisnis Asia/Jakarta (WIB).
+Next.js 16 (App Router) + TypeScript strict · Tailwind CSS v4 · PostgreSQL (Supabase) via Prisma 7 (`@prisma/adapter-pg`, compiler `small`) · Supabase Auth (`@supabase/ssr`, khusus admin) · Zod 4 · Vitest · Deploy **Vercel** (region `sin1`, DB lewat pooler Supabase transaction mode 6543, `DATABASE_URL`) **atau Cloudflare Workers** via `@opennextjs/cloudflare` (DB lewat binding **Hyperdrive** ke koneksi langsung 5432) · Turnstile · Zona waktu bisnis Asia/Jakarta (WIB).
 
-> Next.js 16 berbeda dari versi lama; baca `node_modules/next/dist/docs/` sebelum menulis kode. Aturan proyek: `CLAUDE.md`. Deploy: `DEPLOY.md`.
+> Next.js 16 berbeda dari versi lama; baca `node_modules/next/dist/docs/` sebelum menulis kode. Aturan proyek: `CLAUDE.md`. Deploy: `DEPLOY-VERCEL.md` (Vercel) atau `DEPLOY.md` (Cloudflare).
 
 ## Menjalankan lokal
 ```bash
@@ -24,9 +24,10 @@ npm run preview                  # build OpenNext + jalankan di workerd lokal
 | Nama | Fungsi |
 |---|---|
 | `DIRECT_URL` | Koneksi langsung Supabase (5432) untuk migrate, seed, test integrasi. |
+| `DATABASE_URL` | Runtime Vercel/Node: pooler transaction mode (6543). Di Vercel diisi di Project Settings. Bila diisi lokal, `next dev` memakai DB ini. |
 | `CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE` | Simulasi binding Hyperdrive saat dev/preview (nilai sama dengan `DIRECT_URL`). |
 
-**Runtime Worker (`.dev.vars` lokal; produksi via `wrangler secret put`):**
+**Runtime (Vercel: Project Settings → Environment Variables; Cloudflare: `.dev.vars` lokal / `wrangler secret put`):**
 | Nama | Fungsi |
 |---|---|
 | `SUPABASE_URL` | URL proyek Supabase (Auth admin). |
@@ -36,7 +37,7 @@ npm run preview                  # build OpenNext + jalankan di workerd lokal
 | `SITE_URL` | URL kanonis situs (metadata, sitemap, robots). |
 | `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile form pemesanan. |
 
-**Binding (`wrangler.jsonc`):** `HYPERDRIVE` (database), `ASSETS`, `WORKER_SELF_REFERENCE`.
+**Binding Cloudflare (`wrangler.jsonc`):** `HYPERDRIVE` (database), `ASSETS`, `WORKER_SELF_REFERENCE`. Di Vercel `DATABASE_URL` wajib (divalidasi saat start oleh `src/instrumentation.ts`).
 
 Env runtime divalidasi Zod di `src/lib/env.ts` (`getServerEnv()`, lazy saat pertama dipakai; gagal keras dengan menyebut nama variabel saja). Di luar produksi, `src/lib/public-config.ts` dan `src/lib/seo.ts` punya fallback agar UI bisa dikembangkan tanpa env; di produksi melempar error.
 
@@ -56,7 +57,11 @@ Env runtime divalidasi Zod di `src/lib/env.ts` (`getServerEnv()`, lazy saat pert
 ```
 CLAUDE.md                     aturan proyek untuk AI agent (wajib dibaca)
 progres.md                    status pekerjaan + ukuran bundle
-DEPLOY.md                     langkah deploy manual Cloudflare
+DEPLOY.md                     langkah deploy Cloudflare
+DEPLOY-VERCEL.md              langkah deploy Vercel
+vercel.json                   region fungsi Vercel sin1
+src/instrumentation.ts        validasi env saat server start (produksi)
+prisma/manual/                SQL siap tempel untuk Supabase SQL Editor (setup + seed, tanpa terminal)
 Design/                       screenshot desain Framer (acuan tata letak, BUKAN isi teks)
 wrangler.jsonc                Worker: binding Hyperdrive, assets
 open-next.config.ts           konfigurasi OpenNext Cloudflare
@@ -92,7 +97,8 @@ src/server/booking/           aturan murni + test: rules.ts, dates.ts, input.ts,
 src/server/auth/              authorize.ts (murni), supabase.ts (klien SSR), admin.ts (requireAdminPage/Action)
 src/server/db/                SEMUA akses DB: client.ts (Hyperdrive per request), bookings.ts, public.ts,
                               admin.ts, rate-limit.ts, fixtures.ts (TODO klien), types.ts
-src/server/security/          turnstile.ts, rate-limit.ts
+                              client.ts memilih: binding HYPERDRIVE (Cloudflare) atau DATABASE_URL (Vercel)
+src/server/security/          turnstile.ts, rate-limit.ts, client-ip.ts (IP per platform)
 test/integration/             konkurensi kuota terhadap DB sungguhan
 test/admin/                   otorisasi admin (tanpa sesi, di luar allowlist)
 ```
@@ -132,7 +138,7 @@ Status: `MENUNGGU` → `DIKONFIRMASI` → `LUNAS` → `SELESAI`, atau `BATAL` (d
 
 ## Alur pemesanan
 1. Form: paket, tanggal (daftar Sabtu/Minggu H-3 s.d. +60 hari WIB, tanpa tanggal tutup, format Indonesia), sesi (sisa kuota dimuat per tanggal), peserta, data diri, Turnstile, honeypot `website`. Ringkasan total hanya tampilan.
-2. `submitBooking`: rate limit per IP (`cf-connecting-ip`, 5/10 menit) → honeypot → verifikasi Turnstile di server → Zod `.strict()`.
+2. `submitBooking`: rate limit per IP (Vercel `x-real-ip`/`x-forwarded-for`, Cloudflare `cf-connecting-ip`; 5/10 menit) → honeypot → verifikasi Turnstile di server → Zod `.strict()`.
 3. `createBooking`: **semua validasi sebelum menulis apa pun** (paket aktif, tanggal, `ClosedDate`, sesi aktif & di luar jam tutup 12–15, slot tidak `isClosed`, batas peserta); harga dari DB.
 4. Transaksi: `INSERT SessionSlot … ON CONFLICT DO NOTHING` → `SELECT … FOR UPDATE` → jumlahkan peserta non-`BATAL` → tolak bila > kuota → insert `Booking` (`MENUNGGU`, kode CSPRNG).
 5. Klien menyimpan ringkasan di `sessionStorage` dan membuka `/pesanan/terkirim` (kode, ringkasan, tombol WA `wa.me` ter-encode).

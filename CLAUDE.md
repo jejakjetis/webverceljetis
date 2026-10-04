@@ -77,7 +77,7 @@ Harus berisi: deskripsi singkat proyek, stack, cara menjalankan lokal, daftar en
 - PostgreSQL di Supabase; akses data lewat **Prisma**
 - Supabase Auth (khusus login admin)
 - Zod untuk validasi
-- Deploy: **Cloudflare Workers** via `@opennextjs/cloudflare` (OpenNext); database runtime lewat binding **Hyperdrive** ke koneksi langsung Supabase (port 5432). Pantau ukuran bundle Worker (batas paket gratis 3 MiB gzip).
+- Deploy: **Vercel** (region `sin1`, DB runtime lewat `DATABASE_URL` = pooler Supabase transaction mode 6543) **atau Cloudflare Workers** via `@opennextjs/cloudflare` (DB lewat binding **Hyperdrive** ke koneksi langsung 5432). Kode harus tetap jalan di keduanya; akses DB hanya lewat `src/server/db/client.ts`. Pantau ukuran bundle Worker (batas gratis 3 MiB gzip).
 - Zona waktu bisnis: **Asia/Jakarta (WIB)**
 
 Jangan menambah dependency baru tanpa alasan jelas. Jika menambah, catat alasannya di `progres.md` bagian "Keputusan penting". Pilih paket yang aktif dirawat dan populer; hindari paket kecil yang tidak jelas pemeliharanya.
@@ -127,8 +127,8 @@ Buat agar mudah diubah (konfigurasi atau database), jangan di-hardcode tersebar:
 
 ### 4.1 Rahasia dan environment
 - Tidak pernah menulis secret, password, API key, atau connection string di kode, commit, log, atau file markdown.
-- Rahasia lokal di `.env` (CLI/test) dan `.dev.vars` (runtime Worker lokal); produksi lewat `wrangler secret put` / dashboard Cloudflare. `.env*` dan `.dev.vars*` wajib ada di `.gitignore`; sediakan `.env.example` dan `.dev.vars.example` berisi nama variabel saja.
-- Connection string database (`DIRECT_URL`, binding Hyperdrive) dan kunci Supabase **hanya** dipakai di server. Jangan pernah diberi prefix `NEXT_PUBLIC_`. Modul yang memakainya wajib diawali `import "server-only"`.
+- Rahasia lokal di `.env` (CLI/test) dan `.dev.vars` (runtime Worker lokal); produksi lewat Vercel Environment Variables atau `wrangler secret put` / dashboard Cloudflare. `.env*` dan `.dev.vars*` wajib ada di `.gitignore`; sediakan `.env.example` dan `.dev.vars.example` berisi nama variabel saja.
+- Connection string database (`DIRECT_URL`, `DATABASE_URL`, binding Hyperdrive) dan kunci Supabase **hanya** dipakai di server. Jangan pernah diberi prefix `NEXT_PUBLIC_`. Modul yang memakainya wajib diawali `import "server-only"`.
 - Validasi env dengan Zod (`src/lib/env.ts`); gagal keras jika env wajib tidak ada. Di Workers, secret dibaca saat request, jadi validasi dilakukan saat pertama dipakai.
 
 ### 4.2 Akses database

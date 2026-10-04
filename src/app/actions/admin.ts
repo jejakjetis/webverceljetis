@@ -11,6 +11,7 @@ import { createSupabaseServerClient } from "@/server/auth/supabase";
 import { getServerEnv } from "@/lib/env";
 import { changeBookingStatus } from "@/server/db/admin";
 import { getDb } from "@/server/db/client";
+import { clientIp } from "@/server/security/client-ip";
 import { checkRateLimit } from "@/server/security/rate-limit";
 
 export type LoginState = { error?: string };
@@ -27,7 +28,7 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
 
   try {
     const h = await headers();
-    const ip = h.get("cf-connecting-ip") ?? "unknown";
+    const ip = clientIp(h);
     const db = await getDb();
     if (!(await checkRateLimit(db, "admin-login", ip, { limit: 10, windowMs: 10 * 60 * 1000 }))) {
       return { error: "Terlalu banyak percobaan. Coba lagi dalam beberapa menit." };

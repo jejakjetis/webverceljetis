@@ -8,7 +8,9 @@ import { parseDateOnly } from "@/server/booking/rules";
 // (koneksi langsung 5432) dan konfigurasi klien yang sama dengan runtime (createPrismaClient).
 // Dilewati bila env kosong.
 // Hanya menghapus data yang dibuat test ini sendiri (paket/sesi bertanda __test__).
-const url = process.env.CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE ?? process.env.DIRECT_URL;
+// Prioritas: pooler Vercel (DATABASE_URL, 6543) -> string Hyperdrive lokal / koneksi langsung (5432).
+const url =
+  process.env.DATABASE_URL ?? process.env.CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE ?? process.env.DIRECT_URL;
 const NOW = new Date("2026-10-01T03:00:00Z"); // Kamis 10:00 WIB
 const VISIT = "2026-10-10"; // Sabtu, H-9
 
@@ -16,7 +18,7 @@ describe.skipIf(!url)("kuota di bawah konkurensi (DB sungguhan)", () => {
   // Beberapa klien terpisah = beberapa koneksi, meniru beberapa Worker paralel.
   const clients = Array.from(
     { length: 6 },
-    () => createPrismaClient(url!),
+    () => createPrismaClient(url!, { perRequest: !process.env.DATABASE_URL }),
   );
   const db = clients[0];
   let packageId = "";

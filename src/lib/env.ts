@@ -4,7 +4,7 @@ import { z } from "zod";
 // Di Workers, secret dibaca saat request (OpenNext mengisi process.env), jadi validasi lazy
 // saat pertama dipakai (dan saat start di produksi via instrumentation bila dijalankan).
 // Tidak saat build, agar build tidak butuh secret. Gagal keras jika env wajib kosong.
-// Database tidak lewat env: memakai binding HYPERDRIVE (wrangler.jsonc).
+// Database: Cloudflare memakai binding HYPERDRIVE; Vercel memakai DATABASE_URL (pooler 6543).
 const serverEnvSchema = z.object({
   SUPABASE_URL: z.url(),
   SUPABASE_ANON_KEY: z.string().min(1),
@@ -22,6 +22,8 @@ const serverEnvSchema = z.object({
   SITE_URL: z.url(),
   TURNSTILE_SITE_KEY: z.string().min(1),
   TURNSTILE_SECRET_KEY: z.string().min(1),
+  // Wajib di Vercel (dicek di bawah); tidak dipakai di Cloudflare.
+  DATABASE_URL: z.url().optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
@@ -34,6 +36,9 @@ export function parseServerEnv(source: Record<string, string | undefined>): Serv
     // Hanya nama variabel yang disebut, tidak pernah nilainya.
     const names = [...new Set(parsed.error.issues.map((i) => i.path.join(".")))].join(", ");
     throw new Error(`Env tidak valid atau belum diisi: ${names}`);
+  }
+  if (source.VERCEL && !parsed.data.DATABASE_URL) {
+    throw new Error("Env tidak valid atau belum diisi: DATABASE_URL");
   }
   return parsed.data;
 }

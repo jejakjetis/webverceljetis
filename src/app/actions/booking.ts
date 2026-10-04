@@ -7,6 +7,7 @@ import { RULE_MESSAGES } from "@/server/booking/rules";
 import { createBooking } from "@/server/db/bookings";
 import { getDb } from "@/server/db/client";
 import { type BookingSummary, buildWhatsappMessage, buildWhatsappUrl } from "@/server/booking/whatsapp";
+import { clientIp } from "@/server/security/client-ip";
 import { checkRateLimit } from "@/server/security/rate-limit";
 import { verifyTurnstile } from "@/server/security/turnstile";
 
@@ -47,8 +48,7 @@ export async function submitBooking(
 ): Promise<BookingActionState> {
   try {
     const h = await headers();
-    // Di Cloudflare, cf-connecting-ip diisi oleh edge Cloudflare (tidak bisa dipalsukan klien).
-    const ip = h.get("cf-connecting-ip") ?? "unknown";
+    const ip = clientIp(h);
     const db = await getDb();
 
     if (!(await checkRateLimit(db, "booking", ip))) {

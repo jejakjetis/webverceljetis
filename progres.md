@@ -14,6 +14,8 @@ Front end, form pemesanan, admin, security headers, SEO, dan konfigurasi Cloudfl
 - [x] 2026-10-04 — Admin: Supabase Auth + allowlist, layout & action terproteksi, daftar pesanan + filter, ubah status + log, test tanpa sesi (src/app/admin/, src/server/auth/, test/admin/)
 - [x] 2026-10-04 — Security headers + CSP (cek curl -I di preview), SEO (metadata, Open Graph, robots, sitemap), noindex admin
 - [x] 2026-10-04 — DEPLOY.md (Cloudflare); CLAUDE.md, README.md diperbarui
+- [x] 2026-10-04 — SQL siap tempel untuk deploy tanpa terminal (prisma/manual/)
+- [x] 2026-10-04 — Siap deploy ke Vercel juga: client DB dua target, IP per platform, vercel.json sin1, DEPLOY-VERCEL.md
 
 ## Sedang dikerjakan
 - [ ] Migrasi 0001–0003 + seed + test konkurensi — MENUNGGU `.env` (DIRECT_URL, CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE)
@@ -22,7 +24,7 @@ Front end, form pemesanan, admin, security headers, SEO, dan konfigurasi Cloudfl
 - [ ] Jalankan migrasi/seed/test konkurensi; cek Security Advisor Supabase
 - [ ] Uji form pemesanan end-to-end di preview dengan DB sungguhan
 - [ ] Ganti placeholder: foto (WebP teroptimasi), teks sejarah, data UMKM, FAQ final, alamat & koordinat peta
-- [ ] Deploy manual sesuai DEPLOY.md
+- [ ] Deploy manual: Vercel (DEPLOY-VERCEL.md) atau Cloudflare (DEPLOY.md)
 - [ ] (Ditunda) Midtrans — PAYMENT_MODE tetap "manual"
 
 ## Tugas non-kode
@@ -58,6 +60,8 @@ Front end, form pemesanan, admin, security headers, SEO, dan konfigurasi Cloudfl
 - 2026-10-04 — Halaman sukses membaca ringkasan dari sessionStorage pemesan, tidak dari DB (data pesanan tidak bisa dibuka lewat kode).
 - 2026-10-04 — Token warna ditambah varian kontras AA: terracotta-text #96502F, terracotta-light #D08E6A, muted #76594B, field #8A6F60.
 - 2026-10-04 — Midtrans ditunda; PAYMENT_MODE tetap manual.
+- 2026-10-04 — Satu kode untuk dua target: `getDb()` memakai binding HYPERDRIVE bila ada (Cloudflare, klien per request), selain itu `DATABASE_URL` pooler 6543 (Vercel, satu pool per instance, max 3). `DATABASE_URL` wajib bila `VERCEL` terset.
+- 2026-10-04 — IP rate limit per platform (`src/server/security/client-ip.ts`): di Vercel header `cf-connecting-ip` diabaikan karena bisa dipalsukan klien.
 - 2026-10-04 — Path desain: `Design/`.
 
 ## Menunggu dari klien / belum jelas

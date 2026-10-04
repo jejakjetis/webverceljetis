@@ -86,6 +86,14 @@ Periksa ukuran pada output (`Total Upload … / gzip …`) terhadap batas paket.
 
 Dashboard → Workers → `kampung-batik-jetis` → Settings → Domains & Routes → **Add Custom Domain**. Setelah aktif, pastikan `SITE_URL` sama dengan domain ini dan hostname Turnstile mencakupnya.
 
+## Alternatif: tanpa terminal (dashboard saja)
+
+1. **DB:** Supabase → SQL Editor → tempel & jalankan `prisma/manual/01-setup.sql` (sekali, DB kosong), lalu `prisma/manual/02-seed.sql`. Jangan dicampur dengan `npm run db:deploy` (riwayat migrasi Prisma tidak tercatat lewat cara ini).
+2. **Hyperdrive:** Cloudflare Dashboard → Storage & Databases → Hyperdrive → Create (direct connection 5432). Salin id ke `wrangler.jsonc` lewat editor web GitHub.
+3. **Build:** Workers & Pages → Create → Import a repository (GitHub) → build command `npx opennextjs-cloudflare build`, deploy command `npx opennextjs-cloudflare deploy`.
+4. **Secret:** Worker → Settings → Variables and Secrets (tipe *Secret*), daftar sama dengan langkah 4.
+5. Langkah 3, 7, 8 sama (Turnstile, domain, checklist).
+
 ## 8. Checklist pasca-deploy
 
 - [ ] `curl -I https://domain/` menampilkan `content-security-policy`, `x-frame-options: DENY`, `x-content-type-options: nosniff`, `referrer-policy`, `permissions-policy`, `strict-transport-security`.
