@@ -15,6 +15,7 @@ Front end, form pemesanan, admin, security headers, SEO, dan konfigurasi Cloudfl
 - [x] 2026-10-04 — Security headers + CSP (cek curl -I di preview), SEO (metadata, Open Graph, robots, sitemap), noindex admin
 - [x] 2026-10-04 — DEPLOY.md (Cloudflare); CLAUDE.md, README.md diperbarui
 - [x] 2026-10-04 — SQL siap tempel untuk deploy tanpa terminal (prisma/manual/)
+- [x] 2026-10-04 — Deploy pertama ke Vercel berhasil (jejakjetis.vercel.app); SITE_URL kini toleran + fallback domain Vercel (src/lib/site-url.ts)
 - [x] 2026-10-04 — Siap deploy ke Vercel juga: client DB dua target, IP per platform, vercel.json sin1, DEPLOY-VERCEL.md
 
 ## Sedang dikerjakan
@@ -24,7 +25,7 @@ Front end, form pemesanan, admin, security headers, SEO, dan konfigurasi Cloudfl
 - [ ] Jalankan migrasi/seed/test konkurensi; cek Security Advisor Supabase
 - [ ] Uji form pemesanan end-to-end di preview dengan DB sungguhan
 - [ ] Ganti placeholder: foto (WebP teroptimasi), teks sejarah, data UMKM, FAQ final, alamat & koordinat peta
-- [ ] Deploy manual: Vercel (DEPLOY-VERCEL.md) atau Cloudflare (DEPLOY.md)
+- [ ] Checklist pasca-deploy Vercel (uji pesan nyata, admin, header, Security Advisor)
 - [ ] (Ditunda) Midtrans — PAYMENT_MODE tetap "manual"
 
 ## Tugas non-kode
@@ -54,6 +55,7 @@ Front end, form pemesanan, admin, security headers, SEO, dan konfigurasi Cloudfl
 - 2026-10-04 — **proxy.ts dihapus**: di OpenNext, Node middleware dibundel terpisah beserta server Next (+±1,3 MiB, termasuk resvg/yoga). Proteksi admin tetap dua lapis: layout/halaman + setiap action. Konsekuensi: sesi Supabase tidak di-refresh otomatis di halaman; admin login ulang setelah token habis (sarankan JWT expiry 8 jam).
 - 2026-10-04 — Rate limit: tabel Postgres `RateLimit` (berjalan di Workers via Hyperdrive), bukan binding (periode binding hanya 10/60 dtk). Produksi gagal tertutup; in-memory hanya lokal. IP dari `cf-connecting-ip`, disimpan sebagai hash.
 - 2026-10-04 — Semua route dinamis (`connection()`): env/secret Workers hanya ada saat request.
+- 2026-10-04 — Koordinat peta dari klien: -7.4566926, 112.714282 (Kampoeng Batik Jetis); tombol membuka tautan Google Maps klien.
 - 2026-10-04 — Peta: iframe OpenStreetMap (0 KB JS, tanpa API key) + tautan Google Maps.
 - 2026-10-04 — Gambar: `images.unoptimized`, file statis teroptimasi di /public (tanpa biaya Cloudflare Images). Sementara placeholder SVG kawung buatan sendiri; foto Framer tidak dipakai (lisensi tidak jelas).
 - 2026-10-04 — Tanggal kunjungan dipilih dari daftar (select) Sabtu/Minggu berformat Indonesia, bukan `<input type=date>` (format bergantung browser, tidak bisa membatasi hari).
@@ -69,7 +71,7 @@ Front end, form pemesanan, admin, security headers, SEO, dan konfigurasi Cloudfl
 - Jam setiap sesi (sementara 08–10, 10–12, 15–17)
 - Batas 20 paket umum: per pesanan (asumsi) atau per sesi
 - Kebijakan DP (sementara bayar penuh); nomor WA tujuan; syarat kupon
-- Teks sejarah final + sumber; data 7 UMKM; FAQ final; foto; alamat lengkap & titik koordinat (sementara perkiraan -7.4478, 112.7183 — wajib dicek)
+- Teks sejarah final + sumber; data 7 UMKM; FAQ final; foto; alamat lengkap
 
 ## Masalah diketahui
 - Belum pernah terhubung ke DB sungguhan; test integrasi skip; `/` di preview 500 karena DB dummy.

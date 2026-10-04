@@ -1,7 +1,7 @@
 import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { SITE, googleMapsLink, osmEmbedUrl } from "@/lib/site";
+import { SITE, osmEmbedUrl } from "@/lib/site";
 
 // Embed OpenStreetMap via iframe: 0 KB JavaScript di bundle, tanpa API key.
 // CSP: frame-src https://www.openstreetmap.org.
@@ -22,7 +22,7 @@ export function MapSection() {
             ))}
           </address>
           <div className="mt-6">
-            <ButtonLink href={googleMapsLink(lat, lng)} variant="outline" external>
+            <ButtonLink href={SITE.map.googleMapsUrl} variant="outline" external>
               Buka di Google Maps
             </ButtonLink>
           </div>

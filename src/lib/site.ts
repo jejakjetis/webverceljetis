@@ -4,8 +4,13 @@ export const SITE = {
   tagline: "Wisata edukasi batik tulis di Sidoarjo",
   // TODO(klien): alamat lengkap resmi.
   addressLines: ["Kampung Batik Jetis, Kel. Lemahputro", "Kec. Sidoarjo, Kabupaten Sidoarjo, Jawa Timur"],
-  // TODO(klien): titik koordinat pintu masuk kampung (sementara perkiraan, wajib dicek).
-  map: { lat: -7.4478, lng: 112.7183, zoom: 17 },
+  // Titik "Kampoeng Batik Jetis" dari tautan Google Maps klien (2026-10-04).
+  map: {
+    lat: -7.4566926,
+    lng: 112.714282,
+    zoom: 17,
+    googleMapsUrl: "https://maps.app.goo.gl/8uwvqb7THNcbNNPcA",
+  },
 } as const;
 
 export const NAV_ITEMS = [
@@ -22,8 +27,4 @@ export function osmEmbedUrl(lat: number, lng: number): string {
   const d = 0.004;
   const bbox = [lng - d, lat - d * 0.6, lng + d, lat + d * 0.6].map((n) => n.toFixed(5)).join(",");
   return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik&marker=${lat},${lng}`;
-}
-
-export function googleMapsLink(lat: number, lng: number): string {
-  return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 }
