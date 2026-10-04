@@ -31,7 +31,7 @@ Cloudflare Dashboard → Turnstile → Add widget → hostname: domain produksi 
 | `SUPABASE_ANON_KEY` | anon key |
 | `ADMIN_EMAILS` | email admin, dipisah koma |
 | `BOOKING_WHATSAPP_NUMBER` | nomor WA pengelola, format `62…` |
-| `SITE_URL` | `https://domain-anda` (atau URL `.vercel.app` sementara) |
+| `SITE_URL` | `https://domain-anda`. Opsional di Vercel: bila kosong otomatis memakai domain produksi `.vercel.app` |
 | `TURNSTILE_SITE_KEY` | site key produksi |
 | `TURNSTILE_SECRET_KEY` | secret key produksi |
 

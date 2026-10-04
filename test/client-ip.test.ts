@@ -18,3 +18,16 @@ describe("clientIp", () => {
     expect(clientIp(h({ "x-forwarded-for": "6.6.6.6" }))).toBe("unknown");
   });
 });
+
+import { resolveSiteUrl } from "@/lib/site-url";
+
+describe("resolveSiteUrl", () => {
+  it("menormalkan input umum", () => {
+    expect(resolveSiteUrl({ SITE_URL: " jejakjetis.vercel.app/ \n" })).toBe("https://jejakjetis.vercel.app");
+    expect(resolveSiteUrl({ SITE_URL: "https://contoh.id" })).toBe("https://contoh.id");
+  });
+  it("Vercel tanpa SITE_URL memakai domain produksi Vercel", () => {
+    expect(resolveSiteUrl({ VERCEL: "1", VERCEL_PROJECT_PRODUCTION_URL: "jejakjetis.vercel.app" })).toBe("https://jejakjetis.vercel.app");
+    expect(resolveSiteUrl({})).toBeUndefined();
+  });
+});

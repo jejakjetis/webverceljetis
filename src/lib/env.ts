@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { resolveSiteUrl } from "./site-url";
 
 // Di Workers, secret dibaca saat request (OpenNext mengisi process.env), jadi validasi lazy
 // saat pertama dipakai (dan saat start di produksi via instrumentation bila dijalankan).
@@ -31,7 +32,7 @@ export type ServerEnv = z.infer<typeof serverEnvSchema>;
 let cached: ServerEnv | undefined;
 
 export function parseServerEnv(source: Record<string, string | undefined>): ServerEnv {
-  const parsed = serverEnvSchema.safeParse(source);
+  const parsed = serverEnvSchema.safeParse({ ...source, SITE_URL: resolveSiteUrl(source) });
   if (!parsed.success) {
     // Hanya nama variabel yang disebut, tidak pernah nilainya.
     const names = [...new Set(parsed.error.issues.map((i) => i.path.join(".")))].join(", ");
